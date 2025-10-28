@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BST Traversal Visualizer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      background: #333;
+      color: white;
+      padding: 15px;
+      margin: 0;
+    }
+
+    .input-section {
+      margin: 20px;
+    }
+
+    .tree {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    ul {
+      position: relative;
+      padding-top: 20px;
+      list-style: none;
+    }
+
+    ul ul::before {
+      content: '';
+      position: absolute; 
+      top: 0; 
+      left: 50%;
+      border-left: 2px solid #ccc;
+      height: 20px;
+    }
+
+    li {
+      display: inline-block;
+      text-align: center;
+      vertical-align: top;
+      margin: 0 15px;
+      position: relative;
+    }
+
+    li::before, li::after {
+      content: '';
+      position: absolute; 
+      top: 0; 
+      border-top: 2px solid #ccc;
+      width: 50%; 
+      height: 20px;
+    }
+
+    li::before { left: -50%; }
+    li::after { right: -50%; }
+    li:only-child::before, li:only-child::after {
+      content: none;
+    }
+    li:only-child { padding-top: 0; }
+    li:first-child::before, li:last-child::after { border: 0; }
+    li:last-child::before { border-right: 2px solid #ccc; }
+    li:first-child::after { border-left: 2px solid #ccc; }
+
+    .node {
+      border: 2px solid #333;
+      border-radius: 50%;
+      display: inline-block;
+      padding: 10px 15px;
+      background: #fff;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .highlight {
+      background: #333;
+      color: #fff;
+    }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #333;
+      color: #fff;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #555;
+    }
+
+    #output {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 10px;
+      background: #222;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Binary Search Tree Traversal Visualizer</h1>
+
+  <div class="input-section">
+    <input type="text" id="nodeValue" placeholder="Enter value">
+    <button onclick="insertNode()">Insert</button>
+  </div>
+
+  <div id="tree-container"></div>
+
+  <div class="controls">
+    <button onclick="traverse('preorder')">Preorder</button>
+    <button onclick="traverse('inorder')">Inorder</button>
+    <button onclick="traverse('postorder')">Postorder</button>
+  </div>
+
+  <div id="output"></div>
+
+  <footer>
+    <p>Developed by <strong>Joshuah Gnanraj</strong> | DSA TA1 Project</p>
+  </footer>
+
+  <script>
+    let tree = null;
+
+    function insertNode() {
+      let value = document.getElementById("nodeValue").value.trim();
+      if (!value) return alert("Please enter a value!");
+
+      // convert numeric strings to numbers for correct BST order
+      if (!isNaN(value)) value = Number(value);
+
+      tree = insert(tree, value);
+      renderTree(tree, document.getElementById("tree-container"));
+      document.getElementById("nodeValue").value = "";
+    }
+
+    function insert(node, value) {
+      if (!node) return { value, left: null, right: null };
+      if (value < node.value) node.left = insert(node.left, value);
+      else if (value > node.value) node.right = insert(node.right, value);
+      return node;
+    }
+
+    function renderTree(root, container) {
+      container.innerHTML = "";
+      if (!root) return;
+
+      function createList(node) {
+        if (!node) return "";
+        let id = String(node.value);
+        let html = `<li><div class="node" id="${id}">${node.value}</div>`;
+        if (node.left || node.right) {
+          html += "<ul>";
+          html += createList(node.left);
+          html += createList(node.right);
+          html += "</ul>";
+        }
+        html += "</li>";
+        return html;
+      }
+
+      container.innerHTML = `<div class="tree"><ul>${createList(root)}</ul></div>`;
+    }
+
+    function preorder(node, arr) {
+      if (!node) return;
+      arr.push(String(node.value));
+      preorder(node.left, arr);
+      preorder(node.right, arr);
+    }
+
+    function inorder(node, arr) {
+      if (!node) return;
+      inorder(node.left, arr);
+      arr.push(String(node.value));
+      inorder(node.right, arr);
+    }
+
+    function postorder(node, arr) {
+      if (!node) return;
+      postorder(node.left, arr);
+      postorder(node.right, arr);
+      arr.push(String(node.value));
+    }
+
+    function traverse(type) {
+      if (!tree) return alert("Please insert nodes first!");
+
+      let order = [];
+      if (type === "preorder") preorder(tree, order);
+      else if (type === "inorder") inorder(tree, order);
+      else if (type === "postorder") postorder(tree, order);
+
+      let i = 0;
+      const nodes = document.querySelectorAll(".node");
+      nodes.forEach(n => n.classList.remove("highlight"));
+      document.getElementById("output").textContent = "";
+
+      const interval = setInterval(() => {
+        if (i > 0) document.getElementById(order[i - 1]).classList.remove("highlight");
+        if (i < order.length) {
+          let el = document.getElementById(order[i]);
+          if (el) el.classList.add("highlight");
+          document.getElementById("output").textContent += order[i] + " ";
+          i++;
+        } else clearInterval(interval);
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
